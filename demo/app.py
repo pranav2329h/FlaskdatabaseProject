@@ -1,25 +1,38 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime  
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///project.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
 class Todo(db.Model):
-    sno = db.Column(db.Integer, primary_key=True)  
-    title = db.Column(db.String(200), nullable=True) 
-    desc = db.Column(db.String(500), nullable=True)   
-    date_created = db.Column(db.DateTime, default=datetime.utcnow) 
+    sno = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=True)
+    desc = db.Column(db.String(500), nullable=True)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self) -> str:
-        return f"<Todo {self.title}-{self.sno}>"
+        return f"<Todo {self.title} - {self.sno}>"
 
+# Route for home
 @app.route('/')
-def hello_world():
-    return render_template('index.html')
+def home():
+    if not Todo.query.first():
+        todo = Todo(title="First Todo", desc="Start investing in stock market")
+        db.session.add(todo)
+        db.session.commit()
 
+    allTodo = Todo.query.all()
+    return render_template('index.html', allTodo=allTodo)
+@app.route('/show')
+def products():
+    allTodo = Todo.query.all()
+    print(allTodo)
+    return 'This is the product page'
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()  
     app.run(debug=True)
